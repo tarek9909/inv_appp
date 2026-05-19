@@ -80,9 +80,9 @@ export default function DashboardLayout() {
                 style={{
                   display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '12px',
                   cursor: 'pointer', transition: 'all 0.2s',
-                  background: isActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                  background: isActive ? 'rgba(56, 189, 248, 0.14)' : 'transparent',
                   color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  border: isActive ? '1px solid rgba(59, 130, 246, 0.18)' : '1px solid transparent'
+                  border: isActive ? '1px solid rgba(56, 189, 248, 0.32)' : '1px solid transparent'
                 }}
               >
                 <item.icon size={20} color={isActive ? 'var(--accent-blue)' : 'currentColor'} />

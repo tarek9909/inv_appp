@@ -223,7 +223,7 @@ export default function PurchaseOrdersTab() {
               <FormInput type="number" value={draft.tax_amount} onChange={(v) => setDraft({ ...draft, tax_amount: v })} min="0" step="0.01" />
             </FormField>
             <FormField label="Total">
-              <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', fontSize: '16px', fontWeight: '600', color: 'var(--accent-green)' }}>
+              <div style={{ padding: '12px 16px', background: 'var(--surface-subtle)', borderRadius: '12px', fontSize: '16px', fontWeight: '600', color: 'var(--accent-green)' }}>
                 ${totals.total_amount.toFixed(2)}
               </div>
             </FormField>
@@ -297,7 +297,7 @@ function LineItems({ draft, itemOptions, addLineItem, updateLineItem, removeLine
     <>
       <div style={{ marginTop: '16px', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: '14px', fontWeight: '600' }}>Line Items</span>
-        <button type="button" onClick={addLineItem} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'var(--accent-blue)', padding: '4px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px' }}>+ Add Item</button>
+        <button type="button" onClick={addLineItem} style={{ background: 'var(--surface-subtle)', border: '1px solid var(--glass-border)', color: 'var(--accent-blue)', padding: '4px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px' }}>+ Add Item</button>
       </div>
       {draft.items.map((item, idx) => (
         <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '8px', marginBottom: '8px', alignItems: 'end' }}>
@@ -356,7 +356,7 @@ function PurchaseOrderDetail({ order }) {
 
 function Info({ label, value }) {
   return (
-    <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', borderRadius: '10px', padding: '12px' }}>
+    <div style={{ background: 'var(--surface-subtle)', border: '1px solid var(--glass-border)', borderRadius: '10px', padding: '12px' }}>
       <div style={{ color: 'var(--text-secondary)', fontSize: '12px', marginBottom: '6px' }}>{label}</div>
       <div style={{ fontSize: '14px' }}>{value}</div>
     </div>

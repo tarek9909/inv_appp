@@ -85,7 +85,7 @@ export default function PaymentsTab() {
             <FormSelect value={form.stock_request_id} onChange={(value) => setForm({ ...form, stock_request_id: value, amount: '' })} options={requestOptions} placeholder="Select request" />
           </FormField>
           {selectedRequest && (
-            <div style={{ padding: '12px 14px', marginBottom: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', borderRadius: '10px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+            <div style={{ padding: '12px 14px', marginBottom: '16px', background: 'var(--surface-subtle)', border: '1px solid var(--glass-border)', borderRadius: '10px', fontSize: '13px', color: 'var(--text-secondary)' }}>
               Remaining balance: <strong style={{ color: 'var(--accent-orange)' }}>${Number(selectedRequest.remaining_amount || 0).toFixed(2)}</strong>
             </div>
           )}
