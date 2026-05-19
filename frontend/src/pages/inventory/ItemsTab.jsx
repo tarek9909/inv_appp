@@ -182,7 +182,7 @@ export default function ItemsTab() {
         onLoad={(filters) => { setLowStockMode(false); inventoryStores.items.load(filters); }}
         toolbar={
           <>
-            <button onClick={lowStockMode ? reloadItems : loadLowStock} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: lowStockMode ? 'var(--accent-blue)' : 'var(--text-secondary)', padding: '8px 12px', borderRadius: '10px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
+            <button onClick={lowStockMode ? reloadItems : loadLowStock} style={{ background: 'var(--surface-subtle)', border: '1px solid var(--glass-border)', color: lowStockMode ? 'var(--accent-blue)' : 'var(--text-secondary)', padding: '8px 12px', borderRadius: '10px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
               {lowStockMode ? <List size={16} /> : <AlertTriangle size={16} />} {lowStockMode ? 'All Items' : 'Low Stock'}
             </button>
             <button className="glass-button" style={{ fontSize: '13px', padding: '8px 16px' }} onClick={openCreate}>

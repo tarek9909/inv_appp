@@ -49,7 +49,7 @@ export default function AuditPage() {
           <button onClick={applyFilters} className="glass-button" style={{ fontSize: '13px', padding: '8px 16px', marginBottom: '16px' }}>
             Apply Filters
           </button>
-          <button onClick={() => { setFilters({ start_date: '', end_date: '', action: '' }); adminStores.auditLogs.load({ page: 1 }); }} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px', marginBottom: '16px' }}>
+          <button onClick={() => { setFilters({ start_date: '', end_date: '', action: '' }); adminStores.auditLogs.load({ page: 1 }); }} style={{ background: 'var(--surface-subtle)', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px', marginBottom: '16px' }}>
             Clear
           </button>
         </div>

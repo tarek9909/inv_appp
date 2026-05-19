@@ -84,7 +84,7 @@ export function ConfirmModal({ open, title, message, onConfirm, onCancel, loadin
     <Modal open={open} title={title || 'Confirm Action'} onClose={onCancel} width="400px">
       <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '14px' }}>{message}</p>
       <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-        <button onClick={onCancel} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', padding: '10px 20px', borderRadius: '10px', cursor: 'pointer', fontWeight: '500' }}>
+        <button onClick={onCancel} style={{ background: 'var(--surface-subtle)', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', padding: '10px 20px', borderRadius: '10px', cursor: 'pointer', fontWeight: '500' }}>
           Cancel
         </button>
         <button onClick={onConfirm} disabled={loading} style={{ background: 'linear-gradient(135deg, var(--accent-red), #dc2626)', border: 'none', color: 'white', padding: '10px 20px', borderRadius: '10px', cursor: 'pointer', fontWeight: '500', opacity: loading ? 0.6 : 1 }}>

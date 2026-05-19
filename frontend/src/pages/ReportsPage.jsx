@@ -151,7 +151,7 @@ function ReportSection({ title, icon: Icon, loading, children }) {
       <div style={{ padding: '16px 20px' }}>
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {[1, 2, 3].map((i) => <div key={i} style={{ height: '20px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', animation: 'pulse 1.5s infinite' }} />)}
+            {[1, 2, 3].map((i) => <div key={i} style={{ height: '20px', borderRadius: '4px', background: 'var(--surface-subtle)', animation: 'pulse 1.5s infinite' }} />)}
           </div>
         ) : children}
       </div>

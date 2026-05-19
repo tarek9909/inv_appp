@@ -96,7 +96,7 @@ function DriverRequestDetail({ request }) {
 
 function Info({ label, value }) {
   return (
-    <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', borderRadius: '10px', padding: '12px' }}>
+    <div style={{ background: 'var(--surface-subtle)', border: '1px solid var(--glass-border)', borderRadius: '10px', padding: '12px' }}>
       <div style={{ color: 'var(--text-secondary)', fontSize: '12px', marginBottom: '6px' }}>{label}</div>
       <div style={{ fontSize: '14px' }}>{value}</div>
     </div>

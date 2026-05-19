@@ -176,10 +176,10 @@ export default function TeamPage() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
           {(rolesState.rows || []).map((role) => (
-            <div key={role.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '14px' }}>
+            <div key={role.id} style={{ background: 'var(--surface-subtle)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '14px' }}>
               <div style={{ fontWeight: 700 }}>{role.name}</div>
               <div style={{ color: 'var(--text-secondary)', fontSize: '12px', margin: '4px 0 12px' }}>{role.code}</div>
-              <button type="button" onClick={() => openRoleModal(role)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'var(--accent-blue)', padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <button type="button" onClick={() => openRoleModal(role)} style={{ background: 'var(--surface-subtle)', border: '1px solid var(--glass-border)', color: 'var(--accent-blue)', padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                 <KeyRound size={14} /> Permissions
               </button>
             </div>
@@ -211,7 +211,7 @@ export default function TeamPage() {
         <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '16px' }}>Select new status:</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {USER_STATUSES.map((status) => (
-            <button key={status} onClick={() => handleStatusChange(status)} disabled={statusModal?.status === status} style={{ background: statusModal?.status === status ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '10px 16px', borderRadius: '10px', cursor: statusModal?.status === status ? 'default' : 'pointer', textAlign: 'left', fontSize: '14px', textTransform: 'capitalize', opacity: statusModal?.status === status ? 0.5 : 1 }}>
+            <button key={status} onClick={() => handleStatusChange(status)} disabled={statusModal?.status === status} style={{ background: statusModal?.status === status ? 'var(--surface-muted)' : 'var(--surface-subtle)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '10px 16px', borderRadius: '10px', cursor: statusModal?.status === status ? 'default' : 'pointer', textAlign: 'left', fontSize: '14px', textTransform: 'capitalize', opacity: statusModal?.status === status ? 0.5 : 1 }}>
               {status} {statusModal?.status === status && '(current)'}
             </button>
           ))}

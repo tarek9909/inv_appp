@@ -54,7 +54,7 @@ export default function DashboardHome() {
                 </div>
               </div>
               {loading || value === undefined ? (
-                <div style={{ height: '32px', width: '80px', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', animation: 'pulse 1.5s infinite' }} />
+                <div style={{ height: '32px', width: '80px', borderRadius: '6px', background: 'var(--surface-subtle)', animation: 'pulse 1.5s infinite' }} />
               ) : (
                 <div style={{ fontSize: '28px', fontWeight: '700' }}>{value?.toLocaleString?.() ?? value}</div>
               )}

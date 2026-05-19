@@ -80,9 +80,9 @@ export default function DashboardLayout() {
                 style={{
                   display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '12px',
                   cursor: 'pointer', transition: 'all 0.2s',
-                  background: isActive ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                  background: isActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
                   color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  border: isActive ? '1px solid rgba(255,255,255,0.05)' : '1px solid transparent'
+                  border: isActive ? '1px solid rgba(59, 130, 246, 0.18)' : '1px solid transparent'
                 }}
               >
                 <item.icon size={20} color={isActive ? 'var(--accent-blue)' : 'currentColor'} />
@@ -94,7 +94,7 @@ export default function DashboardLayout() {
 
         <div style={{ marginTop: 'auto', paddingTop: '24px', borderTop: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '600' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--surface-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '600' }}>
               {user.full_name?.charAt(0).toUpperCase()}
             </div>
             <div>

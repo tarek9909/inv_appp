@@ -56,10 +56,10 @@ export default function DataTable({ columns, rows, meta = {}, loading, error, on
                 <tr key={i}>
                   {columns.map((col) => (
                     <td key={col.key} style={{ padding: '14px 16px' }}>
-                      <div style={{ height: '16px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', animation: 'pulse 1.5s infinite' }} />
+                      <div style={{ height: '16px', borderRadius: '4px', background: 'var(--surface-subtle)', animation: 'pulse 1.5s infinite' }} />
                     </td>
                   ))}
-                  {actions && <td style={{ padding: '14px 16px' }}><div style={{ height: '16px', width: '60px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)' }} /></td>}
+                  {actions && <td style={{ padding: '14px 16px' }}><div style={{ height: '16px', width: '60px', borderRadius: '4px', background: 'var(--surface-subtle)' }} /></td>}
                 </tr>
               ))
             ) : error ? (
@@ -68,7 +68,7 @@ export default function DataTable({ columns, rows, meta = {}, loading, error, on
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
                     <AlertCircle size={24} color="var(--accent-red)" />
                     <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>{error?.message || 'Failed to load data'}</span>
-                    <button onClick={() => onLoad?.({})} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
+                    <button onClick={() => onLoad?.({})} style={{ background: 'var(--surface-subtle)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
                       <RefreshCw size={14} /> Retry
                     </button>
                   </div>
@@ -82,7 +82,7 @@ export default function DataTable({ columns, rows, meta = {}, loading, error, on
               </tr>
             ) : (
               rows.map((row, idx) => (
-                <tr key={row.id || idx} style={{ borderBottom: '1px solid var(--glass-border)', transition: 'background 0.15s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                <tr key={row.id || idx} style={{ borderBottom: '1px solid var(--glass-border)', transition: 'background 0.15s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface-subtle)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                   {columns.map((col) => (
                     <td key={col.key} style={{ padding: '14px 16px', fontSize: '14px', color: 'var(--text-primary)', whiteSpace: col.nowrap ? 'nowrap' : 'normal' }}>
                       {col.render ? col.render(row) : row[col.key] ?? '—'}
@@ -107,11 +107,11 @@ export default function DataTable({ columns, rows, meta = {}, loading, error, on
         <div style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--glass-border)', fontSize: '13px', color: 'var(--text-secondary)' }}>
           <span>{total} record{total !== 1 ? 's' : ''}</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button onClick={() => goToPage(page - 1)} disabled={page <= 1} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '6px', borderRadius: '8px', cursor: page <= 1 ? 'not-allowed' : 'pointer', opacity: page <= 1 ? 0.4 : 1 }}>
+            <button onClick={() => goToPage(page - 1)} disabled={page <= 1} style={{ background: 'var(--surface-subtle)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '6px', borderRadius: '8px', cursor: page <= 1 ? 'not-allowed' : 'pointer', opacity: page <= 1 ? 0.4 : 1 }}>
               <ChevronLeft size={16} />
             </button>
             <span>Page {page} of {pages}</span>
-            <button onClick={() => goToPage(page + 1)} disabled={page >= pages} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '6px', borderRadius: '8px', cursor: page >= pages ? 'not-allowed' : 'pointer', opacity: page >= pages ? 0.4 : 1 }}>
+            <button onClick={() => goToPage(page + 1)} disabled={page >= pages} style={{ background: 'var(--surface-subtle)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '6px', borderRadius: '8px', cursor: page >= pages ? 'not-allowed' : 'pointer', opacity: page >= pages ? 0.4 : 1 }}>
               <ChevronRight size={16} />
             </button>
           </div>
@@ -126,7 +126,7 @@ export function ActionButton({ icon: Icon, label, onClick, color = 'var(--text-s
     <button
       onClick={onClick}
       title={label}
-      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color, padding: '8px', minWidth: '36px', minHeight: '36px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      style={{ background: 'var(--surface-subtle)', border: '1px solid var(--glass-border)', color, padding: '8px', minWidth: '36px', minHeight: '36px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
     >
       <Icon size={20} />
     </button>
