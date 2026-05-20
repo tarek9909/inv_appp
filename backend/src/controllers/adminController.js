@@ -1,20 +1,36 @@
 const { Op } = require('sequelize');
-const { Role, User, AuditLog, Permission, RolePermission, sequelize } = require('../models');
+const bcrypt = require('bcryptjs');
+const { Role, User, AuditLog, LoginEvent, Permission, RolePermission, DriverUserLink, Driver, sequelize } = require('../models');
 const { list, findOrFail } = require('../services/crudService');
 const { createUser, updateUser, includeRole } = require('../services/userService');
+const { syncUserIfDriver } = require('../services/driverSyncService');
 const { logAction } = require('../services/auditService');
+const { recordLoginEvent } = require('../services/authService');
+const { userHasPermission } = require('../services/permissionService');
 const { permissions: permissionCatalog } = require('../config/permissions');
 const asyncHandler = require('../utils/asyncHandler');
 const { ok, created } = require('../utils/responses');
 const HttpError = require('../utils/httpError');
 
 exports.listUsers = asyncHandler(async (req, res) => {
-  const { rows, meta } = await list(User, req.query, { include: includeRole, searchFields: ['full_name', 'email', 'phone'] });
+  const canViewTeam = await userHasPermission(req.user, 'team.view');
+  const roleCode = canViewTeam ? req.query.role_code : 'driver';
+  const requestedStatus = canViewTeam ? req.query.status : 'active';
+  const { role_code: ignoredRoleCode, status: ignoredStatus, ...query } = req.query;
+  const include = [{
+    ...includeRole[0],
+    ...(roleCode ? { where: { code: roleCode }, required: true } : {})
+  }, { model: DriverUserLink, as: 'driver_link', include: [{ model: Driver, as: 'driver' }] }];
+  const where = requestedStatus ? { status: requestedStatus } : {};
+  const { rows, meta } = await list(User, query, { where, include, searchFields: ['full_name', 'email', 'phone'] });
   ok(res, 'Users loaded', rows, meta);
 });
 
 exports.createUser = asyncHandler(async (req, res) => {
-  const user = await createUser(req.body);
+  const { monthly_salary, ...payload } = req.body;
+  const user = await createUser(payload);
+  const driver = await syncUserIfDriver(user.id, { actorId: req.user.id });
+  if (driver) await driver.update({ monthly_salary: Number(monthly_salary || 0), updated_by: req.user.id });
   await logAction({ req, action: 'create', module: 'users', recordId: user.id, newData: req.body });
   created(res, 'User created', await User.findByPk(user.id, { include: includeRole }));
 });
@@ -22,7 +38,10 @@ exports.createUser = asyncHandler(async (req, res) => {
 exports.updateUser = asyncHandler(async (req, res) => {
   const user = await findOrFail(User, req.params.id, { name: 'User' });
   const oldData = user.toJSON();
-  const updated = await updateUser(user, req.body);
+  const { monthly_salary, ...payload } = req.body;
+  const updated = await updateUser(user, payload);
+  const driver = await syncUserIfDriver(updated.id, { actorId: req.user.id });
+  if (driver && monthly_salary !== undefined) await driver.update({ monthly_salary: Number(monthly_salary || 0), updated_by: req.user.id });
   await logAction({ req, action: 'update', module: 'users', recordId: user.id, oldData, newData: updated.toJSON() });
   ok(res, 'User updated', updated);
 });
@@ -31,8 +50,20 @@ exports.updateUserStatus = asyncHandler(async (req, res) => {
   const user = await findOrFail(User, req.params.id, { name: 'User' });
   const oldData = user.toJSON();
   await user.update({ status: req.body.status });
+  await syncUserIfDriver(user.id, { actorId: req.user.id });
   await logAction({ req, action: 'status', module: 'users', recordId: user.id, oldData, newData: user.toJSON() });
   ok(res, 'User status updated', user);
+});
+
+exports.resetUserPassword = asyncHandler(async (req, res) => {
+  const user = await User.unscoped().findByPk(req.params.id);
+  if (!user) throw new HttpError(404, 'User not found');
+  const oldData = { id: user.id, must_change_password: user.must_change_password };
+  const password = await bcrypt.hash(req.body.temporary_password, 10);
+  await user.update({ password, must_change_password: true });
+  await recordLoginEvent({ user_id: user.id, email: user.email, event_type: 'admin_reset_password', ip_address: req.ip, user_agent: req.headers['user-agent'] });
+  await logAction({ req, action: 'reset_password', module: 'users', recordId: user.id, oldData, newData: { id: user.id, must_change_password: true } });
+  ok(res, 'Password reset; user must change it on next login');
 });
 
 exports.listRoles = asyncHandler(async (req, res) => {
@@ -119,4 +150,9 @@ exports.updateRolePermissions = asyncHandler(async (req, res) => {
 exports.listAuditLogs = asyncHandler(async (req, res) => {
   const { rows, meta } = await list(AuditLog, req.query, { include: [{ model: User, as: 'user' }], searchFields: ['action', 'module'] });
   ok(res, 'Audit logs loaded', rows, meta);
+});
+
+exports.listLoginEvents = asyncHandler(async (req, res) => {
+  const { rows, meta } = await list(LoginEvent, req.query, { include: [{ model: User, as: 'user' }], searchFields: ['email', 'event_type'] });
+  ok(res, 'Login events loaded', rows, meta);
 });

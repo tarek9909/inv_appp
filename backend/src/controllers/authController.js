@@ -3,7 +3,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const { ok } = require('../utils/responses');
 
 exports.login = asyncHandler(async (req, res) => {
-  const data = await authService.login(req.body);
+  const data = await authService.login(req.body, req);
   ok(res, 'Login successful', data);
 });
 
@@ -21,6 +21,6 @@ exports.updateProfile = asyncHandler(async (req, res) => {
 });
 
 exports.changePassword = asyncHandler(async (req, res) => {
-  await authService.changePassword(req.user.id, req.body);
+  await authService.changePassword(req.user.id, req.body, req);
   ok(res, 'Password changed');
 });

@@ -1,8 +1,9 @@
 const { sequelize, PurchaseOrder, PurchaseOrderItem, Item, Supplier } = require('../models');
 const HttpError = require('../utils/httpError');
 const { generateNumber, toMoney } = require('../utils/numbers');
-const { changeStock } = require('./stockService');
+const { changeStock, toEffectiveBaseQuantity } = require('./stockService');
 const { logAction } = require('./auditService');
+const notificationService = require('./notificationService');
 
 const includePurchaseOrder = [
   { model: Supplier, as: 'supplier' },
@@ -26,12 +27,19 @@ const createPurchaseOrder = async (payload, req) => sequelize.transaction(async 
     created_by: req.user.id
   }, { transaction });
 
-  await PurchaseOrderItem.bulkCreate(payload.items.map((item) => ({
-    purchase_order_id: po.id,
-    item_id: item.item_id,
-    ordered_quantity: item.ordered_quantity,
-    unit_cost: item.unit_cost
-  })), { transaction });
+  const lines = [];
+  for (const line of payload.items) {
+    const item = await Item.findByPk(line.item_id, { transaction });
+    if (!item) throw new HttpError(404, 'Item not found');
+    lines.push({
+      purchase_order_id: po.id,
+      item_id: line.item_id,
+      ordered_quantity: line.ordered_quantity,
+      ordered_base_quantity: toMoney(toEffectiveBaseQuantity(line.ordered_quantity, item)),
+      unit_cost: line.unit_cost
+    });
+  }
+  await PurchaseOrderItem.bulkCreate(lines, { transaction });
 
   await logAction({ req, action: 'create', module: 'purchase_orders', recordId: po.id, newData: payload, transaction });
   return PurchaseOrder.findByPk(po.id, { include: includePurchaseOrder, transaction });
@@ -49,18 +57,29 @@ const receivePurchaseOrder = async (poId, payload, req) => sequelize.transaction
     const newReceived = Number(poItem.received_quantity) + Number(received.received_quantity);
     if (newReceived > Number(poItem.ordered_quantity)) throw new HttpError(400, 'Received quantity cannot exceed ordered quantity');
 
-    await poItem.update({ received_quantity: toMoney(newReceived) }, { transaction });
-
     const item = await Item.findByPk(poItem.item_id, { transaction, lock: transaction.LOCK.UPDATE });
+    if (!item) throw new HttpError(404, 'Item not found');
+    const receivedBaseQuantity = toEffectiveBaseQuantity(received.received_quantity, item);
+    const newReceivedBase = Number(poItem.received_base_quantity || 0) + receivedBaseQuantity;
+    await poItem.update({ received_quantity: toMoney(newReceived), received_base_quantity: toMoney(newReceivedBase) }, { transaction });
+
     await changeStock({
       item,
       quantity: received.received_quantity,
+      baseQuantity: receivedBaseQuantity,
       direction: 'in',
       movementType: 'purchase_received',
       referenceType: 'purchase_orders',
       referenceId: po.id,
       notes: `Received PO ${po.po_number}`,
       userId: req.user.id,
+      batch: {
+        supplier_id: po.supplier_id,
+        purchase_order_item_id: poItem.id,
+        batch_number: received.batch_number,
+        expiry_date: received.expiry_date,
+        unit_cost: poItem.unit_cost
+      },
       transaction
     });
   }
@@ -75,6 +94,15 @@ const receivePurchaseOrder = async (poId, payload, req) => sequelize.transaction
   }, { transaction });
 
   await logAction({ req, action: 'receive', module: 'purchase_orders', recordId: po.id, newData: payload, transaction });
+  await notificationService.notifyPermission({
+    permissionKey: 'purchase_orders.view',
+    type: 'purchase_order_received',
+    title: `Purchase order received: ${po.po_number}`,
+    message: 'Stock has been added from a purchase order receipt.',
+    entityType: 'purchase_orders',
+    entityId: po.id,
+    transaction
+  }).catch(() => {});
   return PurchaseOrder.findByPk(po.id, { include: includePurchaseOrder, transaction });
 });
 
@@ -86,6 +114,15 @@ const cancelPurchaseOrder = async (poId, req) => sequelize.transaction(async (tr
   const oldData = po.toJSON();
   await po.update({ status: 'cancelled' }, { transaction });
   await logAction({ req, action: 'cancel', module: 'purchase_orders', recordId: po.id, oldData, newData: po.toJSON(), transaction });
+  await notificationService.notifyPermission({
+    permissionKey: 'purchase_orders.view',
+    type: 'purchase_order_cancelled',
+    title: `Purchase order cancelled: ${po.po_number}`,
+    message: 'A purchase order has been cancelled.',
+    entityType: 'purchase_orders',
+    entityId: po.id,
+    transaction
+  }).catch(() => {});
   return po;
 });
 

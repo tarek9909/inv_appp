@@ -23,4 +23,11 @@ describe('application smoke tests', () => {
     expect(response.body.success).toBe(false);
     expect(response.body.message).toBe('Authentication token is required');
   });
+
+  it('exposes item archive status route as a protected API route', async () => {
+    const response = await request(app).patch('/api/v1/items/1/status').send({ status: 'inactive' }).expect(401);
+
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe('Authentication token is required');
+  });
 });

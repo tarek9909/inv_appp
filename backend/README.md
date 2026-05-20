@@ -15,13 +15,13 @@ CREATE DATABASE stock_driver_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicod
 
 ```bash
 npm install
-npm run migrate
 npm run seed
 npm run dev
 ```
 
 The API runs at `http://localhost:3000`.
 Swagger docs are available at `http://localhost:3000/api-docs`.
+Pending migrations run automatically when the backend starts. Set `DB_AUTO_MIGRATE=false` only if you want to manage migrations manually with `npm run migrate`.
 
 ## Production Environment
 
@@ -31,6 +31,7 @@ For Render + MySQLFreeDatabase, set these variables on the backend service:
 - `TRUST_PROXY=true`
 - `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
 - `DB_SSL=false` unless your MySQL provider requires SSL
+- `DB_AUTO_MIGRATE=true`
 - `JWT_SECRET`
 - `CORS_ORIGIN=https://your-frontend.onrender.com`
 

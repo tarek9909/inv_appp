@@ -6,9 +6,16 @@ const parseList = (value) => String(value || '')
   .filter(Boolean);
 
 const parseBoolean = (value) => ['1', 'true', 'yes', 'on'].includes(String(value || '').toLowerCase());
+const DEFAULT_DEV_JWT_SECRET = 'development_only_change_me';
+const jwtSecret = process.env.JWT_SECRET || DEFAULT_DEV_JWT_SECRET;
+const env = process.env.NODE_ENV || 'development';
+
+if (env === 'production' && (!process.env.JWT_SECRET || jwtSecret === DEFAULT_DEV_JWT_SECRET || jwtSecret === 'replace_with_a_long_random_secret')) {
+  throw new Error('JWT_SECRET must be configured with a strong non-default value in production');
+}
 
 module.exports = {
-  env: process.env.NODE_ENV || 'development',
+  env,
   port: Number(process.env.PORT || 3000),
   trustProxy: parseBoolean(process.env.TRUST_PROXY),
   cors: {
@@ -21,10 +28,11 @@ module.exports = {
     name: process.env.DB_NAME || 'stock_driver_system',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    ssl: parseBoolean(process.env.DB_SSL)
+    ssl: parseBoolean(process.env.DB_SSL),
+    autoMigrate: String(process.env.DB_AUTO_MIGRATE || 'true').toLowerCase() !== 'false'
   },
   jwt: {
-    secret: process.env.JWT_SECRET || 'development_only_change_me',
+    secret: jwtSecret,
     expiresIn: process.env.JWT_EXPIRES_IN || '1d'
   },
   qz: {

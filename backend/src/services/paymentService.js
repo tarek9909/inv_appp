@@ -11,7 +11,8 @@ const includePayment = [
 const createPayment = async (payload, req) => sequelize.transaction(async (transaction) => {
   const request = await StockRequest.findByPk(payload.stock_request_id, { transaction, lock: transaction.LOCK.UPDATE });
   if (!request) throw new HttpError(404, 'Stock request not found');
-  if (request.payment_status === 'cancelled') throw new HttpError(400, 'Cancelled requests cannot receive payments');
+  if (request.request_status === 'cancelled' || request.payment_status === 'cancelled') throw new HttpError(400, 'Cancelled requests cannot receive payments');
+  if (request.request_type !== 'stock_out') throw new HttpError(400, 'Payments can only be recorded for stock out requests');
 
   const paid = Number(request.paid_amount) + Number(payload.amount);
   const total = Number(request.total_amount);
@@ -28,13 +29,14 @@ const createPayment = async (payload, req) => sequelize.transaction(async (trans
     received_by: req.user.id
   }, { transaction });
 
-  const remaining = total - paid;
+  const remaining = toMoney(total - paid);
+  const isPaid = remaining <= 0;
   await request.update({
     paid_amount: toMoney(paid),
-    remaining_amount: toMoney(remaining),
-    payment_status: remaining === 0 ? 'paid' : paid > 0 ? 'partially_paid' : 'pending',
-    paid_by: remaining === 0 ? req.user.id : request.paid_by,
-    paid_at: remaining === 0 ? new Date() : request.paid_at
+    remaining_amount: isPaid ? 0 : remaining,
+    payment_status: isPaid ? 'paid' : paid > 0 ? 'partially_paid' : 'pending',
+    paid_by: isPaid ? req.user.id : request.paid_by,
+    paid_at: isPaid ? new Date() : request.paid_at
   }, { transaction });
 
   await logAction({ req, action: 'create', module: 'payments', recordId: payment.id, newData: payment.toJSON(), transaction });

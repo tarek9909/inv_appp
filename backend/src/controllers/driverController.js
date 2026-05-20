@@ -26,6 +26,7 @@ exports.listStockRequests = asyncHandler(async (req, res) => {
     include: stockRequestService.includeStockRequest,
     order: [['created_at', 'DESC']]
   });
+  rows.forEach(stockRequestService.withReceiptStatus);
   ok(res, 'Driver stock requests loaded', rows, { total: rows.length });
 });
 
@@ -40,5 +41,17 @@ exports.getStockRequest = asyncHandler(async (req, res) => {
     include: stockRequestService.includeStockRequest
   });
   if (!request) throw new HttpError(404, 'Stock request not found');
-  ok(res, 'Driver stock request loaded', request);
+  ok(res, 'Driver stock request loaded', stockRequestService.withReceiptStatus(request));
+});
+
+exports.markInvoiceViewed = asyncHandler(async (req, res) => {
+  const driver = await loadDriverForUser(req.user.id);
+  const request = await stockRequestService.markDriverInvoiceViewed(req.params.id, driver, req);
+  ok(res, 'Driver invoice opened', request);
+});
+
+exports.submitReceipt = asyncHandler(async (req, res) => {
+  const driver = await loadDriverForUser(req.user.id);
+  const request = await stockRequestService.submitDriverReceipt(req.params.id, driver, req.body, req);
+  ok(res, 'Driver receipt submitted', request);
 });

@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { getPagination, paged } = require('../utils/pagination');
+const { getPagination, paged, approximatePaged } = require('../utils/pagination');
 const HttpError = require('../utils/httpError');
 
 const buildSearch = (fields, search) => {
@@ -9,15 +9,22 @@ const buildSearch = (fields, search) => {
 
 const list = async (Model, query, options = {}) => {
   const { page, limit, offset } = getPagination(query);
-  const result = await Model.findAndCountAll({
-    where: buildSearch(options.searchFields || [], query.search),
+  const searchWhere = buildSearch(options.searchFields || [], query.search);
+  const baseOptions = {
+    where: { ...(options.where || {}), ...searchWhere },
+    attributes: options.attributes,
     include: options.include || [],
     order: options.order || [['id', 'DESC']],
-    limit,
+    limit: query.exact_count === 'true' ? limit : limit + 1,
     offset,
     distinct: true
-  });
-  return paged(result, page, limit);
+  };
+
+  if (query.exact_count === 'true') {
+    return paged(await Model.findAndCountAll(baseOptions), page, limit);
+  }
+
+  return approximatePaged(await Model.findAll(baseOptions), page, limit, offset);
 };
 
 const findOrFail = async (Model, id, options = {}) => {

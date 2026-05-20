@@ -6,14 +6,26 @@ const { ok } = require('../utils/responses');
 const SETTING_KEYS = {
   accepted_request_fulfillment_mode: ['print', 'driver_portal', 'both'],
   qz_tray_enabled: ['true', 'false'],
-  qz_default_printer: null
+  qz_default_printer: null,
+  commissions_enabled: ['true', 'false'],
+  commission_period: ['monthly'],
+  commission_source_status: ['completed']
 };
 
-exports.listSettings = asyncHandler(async (req, res) => {
+let settingsCache = { expiresAt: 0, data: null };
+const SETTINGS_CACHE_MS = 30 * 1000;
+
+const loadSettings = async ({ force = false } = {}) => {
+  if (!force && settingsCache.data && settingsCache.expiresAt > Date.now()) return settingsCache.data;
   const rows = await Setting.findAll({ order: [['setting_key', 'ASC']] });
   const settings = {};
   rows.forEach((row) => { settings[row.setting_key] = row.setting_value || ''; });
-  ok(res, 'Settings loaded', settings);
+  settingsCache = { data: settings, expiresAt: Date.now() + SETTINGS_CACHE_MS };
+  return settings;
+};
+
+exports.listSettings = asyncHandler(async (req, res) => {
+  ok(res, 'Settings loaded', await loadSettings());
 });
 
 exports.updateSettings = asyncHandler(async (req, res) => {
@@ -30,7 +42,7 @@ exports.updateSettings = asyncHandler(async (req, res) => {
   const oldData = Object.fromEntries(oldRows.map((row) => [row.setting_key, row.setting_value]));
 
   for (const [key, value] of Object.entries(updates)) {
-    const valueType = key === 'qz_tray_enabled' ? 'boolean' : 'string';
+    const valueType = ['qz_tray_enabled', 'commissions_enabled'].includes(key) ? 'boolean' : 'string';
     const existing = await Setting.findOne({ where: { setting_key: key } });
     if (existing) {
       await existing.update({ setting_value: value, value_type: valueType, updated_by: req.user.id, updated_at: new Date() });
@@ -40,6 +52,5 @@ exports.updateSettings = asyncHandler(async (req, res) => {
   }
 
   await logAction({ req, action: 'update', module: 'settings', newData: updates, oldData });
-  const rows = await Setting.findAll({ order: [['setting_key', 'ASC']] });
-  ok(res, 'Settings updated', Object.fromEntries(rows.map((row) => [row.setting_key, row.setting_value || ''])));
+  ok(res, 'Settings updated', await loadSettings({ force: true }));
 });

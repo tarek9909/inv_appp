@@ -9,10 +9,12 @@ const permissions = [
   ['items.stock_entry', 'Inventory', 'Items', 'Create stock entries'],
   ['items.adjust_stock', 'Inventory', 'Items', 'Adjust stock'],
   ['categories.view', 'Inventory', 'Categories', 'View categories'],
-  ['categories.manage', 'Inventory', 'Categories', 'Create, edit, archive, and restore categories'],
+  ['categories.manage', 'Inventory', 'Categories', 'Create and edit categories'],
+  ['categories.archive', 'Inventory', 'Categories', 'Archive and restore categories'],
   ['categories.delete', 'Inventory', 'Categories', 'Permanently delete categories'],
   ['suppliers.view', 'Inventory', 'Suppliers', 'View suppliers'],
-  ['suppliers.manage', 'Inventory', 'Suppliers', 'Create, edit, archive, and restore suppliers'],
+  ['suppliers.manage', 'Inventory', 'Suppliers', 'Create and edit suppliers'],
+  ['suppliers.archive', 'Inventory', 'Suppliers', 'Archive and restore suppliers'],
   ['suppliers.delete', 'Inventory', 'Suppliers', 'Permanently delete suppliers'],
   ['purchase_orders.view', 'Inventory', 'Purchase Orders', 'View purchase orders'],
   ['purchase_orders.create', 'Inventory', 'Purchase Orders', 'Create purchase orders'],
@@ -27,6 +29,10 @@ const permissions = [
   ['drivers.archive', 'Fleet', 'Drivers', 'Archive and restore drivers'],
   ['drivers.delete', 'Fleet', 'Drivers', 'Permanently delete drivers'],
   ['drivers.view_balance', 'Fleet', 'Drivers', 'View driver balances'],
+  ['locations.view', 'Fleet', 'Locations', 'View driver locations'],
+  ['locations.manage', 'Fleet', 'Locations', 'Create, edit, archive, and restore driver locations'],
+  ['commissions.manage', 'Fleet', 'Commissions', 'Manage location commission rules'],
+  ['targets.manage', 'Fleet', 'Targets', 'Manage monthly location and driver targets'],
   ['stock_requests.view', 'Fleet', 'Stock Requests', 'View stock requests'],
   ['stock_requests.create', 'Fleet', 'Stock Requests', 'Create stock requests'],
   ['stock_requests.update', 'Fleet', 'Stock Requests', 'Edit stock requests'],
@@ -37,8 +43,11 @@ const permissions = [
   ['payments.view', 'Fleet', 'Payments', 'View payments'],
   ['payments.create', 'Fleet', 'Payments', 'Record payments'],
   ['reports.view', 'Reports', 'Reports', 'View reports'],
+  ['notifications.view', 'Notifications', 'Notifications', 'View in-app notifications'],
+  ['attachments.manage', 'Attachments', 'Files', 'Upload and manage record attachments'],
   ['team.view', 'Team', 'Users', 'View users and roles'],
   ['users.manage', 'Team', 'Users', 'Create and edit user accounts'],
+  ['users.reset_password', 'Team', 'Users', 'Reset user passwords'],
   ['roles.manage', 'Team', 'Roles', 'Create roles and assign permissions'],
   ['audit_logs.view', 'Audit', 'Audit Logs', 'View audit logs'],
   ['settings.manage', 'Configuration', 'Settings', 'Manage system configuration'],
@@ -59,14 +68,18 @@ const defaultRolePermissions = {
     'items.adjust_stock',
     'categories.view',
     'categories.manage',
+    'categories.archive',
     'suppliers.view',
     'suppliers.manage',
+    'suppliers.archive',
     'purchase_orders.view',
     'purchase_orders.create',
     'purchase_orders.update',
     'purchase_orders.receive',
     'purchase_orders.cancel',
-    'stock_movements.view'
+    'stock_movements.view',
+    'notifications.view',
+    'attachments.manage'
   ],
   accountant: [
     'fleet.view',
@@ -75,6 +88,10 @@ const defaultRolePermissions = {
     'drivers.update',
     'drivers.archive',
     'drivers.view_balance',
+    'locations.view',
+    'locations.manage',
+    'commissions.manage',
+    'targets.manage',
     'stock_requests.view',
     'stock_requests.create',
     'stock_requests.update',
@@ -83,9 +100,11 @@ const defaultRolePermissions = {
     'stock_requests.cancel',
     'stock_requests.print',
     'payments.view',
-    'payments.create'
+    'payments.create',
+    'notifications.view',
+    'attachments.manage'
   ],
-  driver: ['driver_portal.view']
+  driver: ['driver_portal.view', 'notifications.view']
 };
 
 module.exports = { permissions, allPermissionKeys, defaultRolePermissions };

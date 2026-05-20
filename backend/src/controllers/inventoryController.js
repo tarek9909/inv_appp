@@ -19,8 +19,39 @@ const HttpError = require('../utils/httpError');
 
 const itemIncludes = [
   { model: ItemCategory, as: 'category' },
-  { model: Supplier, as: 'supplier' }
+  { model: Supplier, as: 'supplier' },
+  { model: Item, as: 'carton_item' }
 ];
+
+const reservedStockSql = '(SELECT COALESCE(SUM(sr.quantity), 0) FROM stock_reservations sr WHERE sr.item_id = items.id AND sr.status = \'active\')';
+const availabilityAttributes = {
+  include: [
+    [literal(reservedStockSql), 'reserved_stock'],
+    [literal(`items.current_stock - ${reservedStockSql}`), 'available_stock']
+  ]
+};
+
+const normalizeItemPayload = async (payload, existingItem = null) => {
+  const data = { ...payload };
+  data.is_carton = Boolean(data.is_carton);
+  if (data.size_unit === '') data.size_unit = null;
+  if (data.sku === '') data.sku = null;
+  if (data.barcode === '') data.barcode = null;
+
+  if (data.is_carton) {
+    if (!data.carton_item_id) throw new HttpError(400, 'Carton item is required');
+    if (!data.carton_quantity || Number(data.carton_quantity) <= 0) throw new HttpError(400, 'Carton quantity must be greater than 0');
+    if (existingItem && Number(data.carton_item_id) === Number(existingItem.id)) throw new HttpError(400, 'A carton cannot contain itself');
+    const contained = await Item.findByPk(data.carton_item_id);
+    if (!contained || contained.is_carton) throw new HttpError(400, 'Carton must contain a regular item');
+    data.unit = 'carton';
+  } else {
+    data.carton_item_id = null;
+    data.carton_quantity = null;
+  }
+
+  return data;
+};
 
 const createCrudHandlers = (Model, module, searchFields, extra = {}) => ({
   list: asyncHandler(async (req, res) => {
@@ -28,18 +59,27 @@ const createCrudHandlers = (Model, module, searchFields, extra = {}) => ({
     ok(res, `${module} loaded`, rows, meta);
   }),
   create: asyncHandler(async (req, res) => {
-    const data = { ...req.body };
+    const data = module === 'items' ? await normalizeItemPayload(req.body) : { ...req.body };
     if ('created_by' in Model.rawAttributes) data.created_by = req.user.id;
     const row = await Model.create(data);
+    if (module === 'items' && row.is_carton) {
+      await stockService.syncCartonStocks({ containedItemId: row.carton_item_id });
+      await row.reload();
+    }
     await logAction({ req, action: 'create', module, recordId: row.id, newData: row.toJSON() });
     created(res, `${module} created`, row);
   }),
   update: asyncHandler(async (req, res) => {
     const row = await findOrFail(Model, req.params.id, { name: module });
     const oldData = row.toJSON();
-    const data = { ...req.body };
+    const data = module === 'items' ? await normalizeItemPayload({ ...row.toJSON(), ...req.body }, row) : { ...req.body };
     if ('current_stock' in data) delete data.current_stock;
     await row.update(data);
+    if (module === 'items') {
+      if (oldData.carton_item_id) await stockService.syncCartonStocks({ containedItemId: oldData.carton_item_id });
+      if (row.is_carton && row.carton_item_id) await stockService.syncCartonStocks({ containedItemId: row.carton_item_id });
+      await row.reload();
+    }
     await logAction({ req, action: 'update', module, recordId: row.id, oldData, newData: row.toJSON() });
     ok(res, `${module} updated`, row);
   })
@@ -49,16 +89,48 @@ exports.categories = createCrudHandlers(ItemCategory, 'categories', ['name', 'de
 exports.suppliers = createCrudHandlers(Supplier, 'suppliers', ['name', 'phone', 'email']);
 exports.items = createCrudHandlers(Item, 'items', ['name', 'sku', 'description'], { include: itemIncludes });
 
+exports.items.list = asyncHandler(async (req, res) => {
+  const { rows, meta } = await list(Item, req.query, { searchFields: ['name', 'sku', 'barcode', 'description'], include: itemIncludes, attributes: availabilityAttributes });
+  ok(res, 'items loaded', rows, meta);
+});
+
+const updateStatus = (Model, module, name) => asyncHandler(async (req, res) => {
+  const row = await findOrFail(Model, req.params.id, { name });
+  const oldData = row.toJSON();
+  await row.update({ status: req.body.status, updated_at: new Date() });
+  await logAction({ req, action: 'status', module, recordId: row.id, oldData, newData: row.toJSON() });
+  ok(res, `${name} status updated`, row);
+});
+
+exports.updateCategoryStatus = updateStatus(ItemCategory, 'categories', 'Category');
+exports.updateSupplierStatus = updateStatus(Supplier, 'suppliers', 'Supplier');
+exports.updateItemStatus = updateStatus(Item, 'items', 'Item');
+
 exports.lowStockItems = asyncHandler(async (req, res) => {
   const rows = await Item.findAll({
     where: {
       status: 'active',
-      [Op.and]: literal('current_stock <= minimum_stock')
+      [Op.and]: literal(`items.current_stock - ${reservedStockSql} <= items.minimum_stock`)
     },
+    attributes: availabilityAttributes,
     include: itemIncludes,
     order: [['name', 'ASC']]
   });
   ok(res, 'Low stock items loaded', rows);
+});
+
+exports.lookupItem = asyncHandler(async (req, res) => {
+  const code = String(req.query.code || '').trim();
+  const item = await Item.findOne({
+    where: {
+      status: 'active',
+      [Op.or]: [{ sku: code }, { barcode: code }]
+    },
+    include: itemIncludes
+  });
+  if (!item) throw new HttpError(404, 'Item not found');
+  await stockService.attachAvailability(item);
+  ok(res, 'Item loaded', item);
 });
 
 exports.addStockEntry = asyncHandler(async (req, res) => {
@@ -74,6 +146,14 @@ exports.adjustStock = asyncHandler(async (req, res) => {
 exports.listStockMovements = asyncHandler(async (req, res) => {
   const { rows, meta } = await list(StockMovement, req.query, { include: [{ model: Item, as: 'item' }] });
   ok(res, 'Stock movements loaded', rows, meta);
+});
+
+exports.listBatches = asyncHandler(async (req, res) => {
+  ok(res, 'Inventory batches loaded', await stockService.listBatches(req.query));
+});
+
+exports.expiryRisk = asyncHandler(async (req, res) => {
+  ok(res, 'Expiry risk loaded', await stockService.expiryRisk(req.query));
 });
 
 exports.listPurchaseOrders = asyncHandler(async (req, res) => {
@@ -95,6 +175,7 @@ exports.updatePurchaseOrder = asyncHandler(async (req, res) => {
   const po = await findOrFail(PurchaseOrder, req.params.id, { name: 'Purchase order' });
   const oldData = po.toJSON();
   const next = { ...req.body };
+  delete next.status;
   if ('discount_amount' in next || 'tax_amount' in next) {
     const discount = Number(next.discount_amount ?? po.discount_amount ?? 0);
     const tax = Number(next.tax_amount ?? po.tax_amount ?? 0);

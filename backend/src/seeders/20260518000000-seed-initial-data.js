@@ -5,7 +5,11 @@ const bcrypt = require('bcryptjs');
 module.exports = {
   async up(queryInterface) {
     const now = new Date();
-    const password = await bcrypt.hash('password123', 10);
+    const seedPassword = process.env.SEED_DEFAULT_PASSWORD;
+    if (process.env.NODE_ENV === 'production' && !seedPassword) {
+      throw new Error('SEED_DEFAULT_PASSWORD is required when seeding production');
+    }
+    const password = await bcrypt.hash(seedPassword || 'password123', 10);
 
     await queryInterface.bulkInsert('roles', [
       { id: 1, name: 'Admin', code: 'admin', description: 'Full access to the whole system', created_at: now, updated_at: now },
